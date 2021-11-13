@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+{% block body %}
+<h1>Login to your account</h1>
+<form action="/login" id="login" method="post" enctype="multipart/form-data">
+   <label for="username">Username: </label>
+   <input id="username" type="text" name="username"><br/>
+   <label for="password">Password: </label>
+   <input id="password" type="text" name="password">
+   <input type="submit" value="Login">
+</form>
+{% endblock %}
