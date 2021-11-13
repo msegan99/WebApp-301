@@ -1,6 +1,6 @@
 from flask import Flask, request, redirect, render_template, abort
 from pymongo import MongoClient
-import hashlib, os
+import bcrypt
 
 app = Flask(__name__)
 client= MongoClient('localhost', 27017)
@@ -25,11 +25,8 @@ def login():
         if(accountCollection.count_documents({"username": username})==1): #if this username exist
             accountDocument=accountCollection.find_one({"username": username})
             hashedPassword=accountDocument["password"]
-            unhashedPasswordKey= hashedPassword[32:] #randomSalt was 32 bytes. key is the rest
-            userSalt=userSalts[username]
-            keyToCheck=hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), userSalt, 100000)
-
-            if keyToCheck==unhashedPasswordKey: #SUCCESSFUL login. password keys match
+            passwordMatch=bcrypt.checkpw(password, hashedPassword)
+            if passwordMatch: #SUCCESSFUL login. password keys match
                 print("Successful login!")
                 return redirect('/mainpage')
                 
@@ -55,10 +52,7 @@ def createAccount():
 
         else: #successful register
             #Hash password and then add username and password to accountCollection
-            randomSalt= os.urandom(32)
-            userSalts[username]=randomSalt #store salt so we can verify login attempts
-            saltkey = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), randomSalt, 100000)
-            hashedPassword = randomSalt + saltkey 
+            hashedPassword=bcrypt.hashpw(password, bcrypt.gensalt())
             document={ "username": username, "password": hashedPassword}
             accountCollection.insert(document)
             return redirect('/mainpage')
