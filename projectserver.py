@@ -1,15 +1,20 @@
 from flask import Flask, request, redirect, render_template, abort, session
+from flask_socketio import SocketIO, send, emit
+from flask_session import Session
+import json
 from pymongo import MongoClient
 import bcrypt, secrets
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
 app.config['SESSION_TYPE']='filesystem'
+Session(app)
+socketio=SocketIO(app)
 client= MongoClient('localhost', 27017)
 db=client["312ProjectDatabase"]
 accountCollection=db["accountCollection"]
 chatCollection=db["chatCollection"]
-userSalts={}
+currentUserCollection=db["currentUserCollection"]
 
 @app.route('/')
 def hello():
@@ -61,9 +66,6 @@ def createAccount():
             session['username']=username
             return redirect('/chatpage')
 
-
-
-
 @app.route('/chatpage', methods=['GET', 'POST'])
 def chat():
     if request.method == 'GET':
@@ -74,6 +76,30 @@ def chat():
     else:
         return abort(403)
 
+@socketio.on('user connected')
+def test_connect(auth):
+    userDoc={ "username": session['username']}
+    currentUserCollection.insert_one(userDoc)
+    currentUserListCursor=currentUserCollection.find()
+    currentUserListStr=""
+    doc=next(currentUserListCursor, None)
+    while doc :
+        user=doc['username']
+        currentUserListStr+=(user+", ")
+        doc=next(currentUserListCursor, None)
+        
+    emit('username joined', {'username': session['username'], 'currentUserList': currentUserListStr}, broadcast=True)
+
+@socketio.on('disconnect')
+def test_disconnect():
+    userDoc={"username": session['username']}
+    currentUserCollection.deleteOne(userDoc)
+    currentUserList=list(currentUserCollection.find())
+    currentUserListStr=""
+    for user in currentUserList:
+        currentUserListStr+=(user+" ,")
+    emit('username left', {'username': session['username'], 'currentUserList': currentUserListStr}, broadcast=True)
+    print('Client disconnected')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    socketio.run(app,debug=True)

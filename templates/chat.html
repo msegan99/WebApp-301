@@ -3,12 +3,19 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
 <script type="text/javascript" charset="utf-8">
     var socket = io();
-    socket.on('connect', function() {
-        socket.emit('connect', 'Hi user');
+    socket.on('connect', function(data) {
+        socket.emit('user connected', 'someone is connecting');
     });
-    socket.on('user joined notification', function(data) {
-        document.getElementById('currentUsers').innerHTML+=("USER: " + data['username'])
-        alert("user joined chat with data: "+data['username'])
+    socket.on('username joined', function(data) {
+        document.getElementById('currentUsers').innerHTML=data['currentUserList']
+        alert("user joined chat with username: "+data['username'])
+    });
+    socket.on('username left', function(data) {
+        var curr=document.getElementById('currentUsers').innerText
+        curr=curr.replace((data['username'] + ", "), "")
+        document.getElementById('currentUsers').innerText=data['currentUserList']
+        alert("user disconnected who had username: " + data['username'])
+            
     });
 
 </script>
