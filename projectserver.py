@@ -13,7 +13,7 @@ socketio=SocketIO(app)
 client= MongoClient('localhost', 27017)
 db=client["312ProjectDatabase"]
 accountCollection=db["accountCollection"]
-chatCollection=db["chatCollection"]
+postCollection=db["chatCollection"]
 currentUserCollection=db["currentUserCollection"]
 
 @app.route('/')
@@ -71,13 +71,16 @@ def chat():
     if request.method == 'GET':
         return render_template("chat.html", username=session['username'])
     if request.method == 'POST':
-        # if it was a form, you can access it on request.form
-        return "wow you made a post request to me!"
+        postMessage=request.form["postBox"]
+        document={"username": session['username'], "post": postMessage}
+        postCollection.insert_one(document)
+        return redirect('/chatpage')
     else:
         return abort(403)
 
 @socketio.on('user connected')
 def test_connect(auth):
+    #update current user list
     userDoc={ "username": session['username']}
     currentUserCollection.insert_one(userDoc)
     currentUserListCursor=currentUserCollection.find()
@@ -87,19 +90,39 @@ def test_connect(auth):
         user=doc['username']
         currentUserListStr+=(user+", ")
         doc=next(currentUserListCursor, None)
+
+    #update current chat. send over current chat log
+    currentChatCursor=postCollection.find()
+    currentChatStr=""
+    doc2=next(currentChatCursor, None)
+    while doc2 :
+        user2=doc2['username']
+        postMessage=doc2['post']
+        currentChatStr+=(user2+": "+postMessage+"<br>")
+        doc2=next(currentChatCursor, None)
+
+    
         
-    emit('username joined', {'username': session['username'], 'currentUserList': currentUserListStr}, broadcast=True)
+    emit('username joined', {'username': session['username'], 'currentUserList': currentUserListStr, 'currentChat': currentChatStr}, broadcast=True)
 
 @socketio.on('disconnect')
 def test_disconnect():
     userDoc={"username": session['username']}
     currentUserCollection.deleteOne(userDoc)
-    currentUserList=list(currentUserCollection.find())
+    currentUserListCursor=currentUserCollection.find()
     currentUserListStr=""
-    for user in currentUserList:
-        currentUserListStr+=(user+" ,")
+    doc=next(currentUserListCursor, None)
+    while doc :
+        user=doc['username']
+        currentUserListStr+=(user+", ")
+        doc=next(currentUserListCursor, None)
+        
     emit('username left', {'username': session['username'], 'currentUserList': currentUserListStr}, broadcast=True)
     print('Client disconnected')
+
+
+    
+
 
 if __name__ == '__main__':
     socketio.run(app,debug=True)

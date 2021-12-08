@@ -6,24 +6,29 @@
     socket.on('connect', function(data) {
         socket.emit('user connected', 'someone is connecting');
     });
+    
     socket.on('username joined', function(data) {
         document.getElementById('currentUsers').innerHTML=data['currentUserList']
+        document.getElementById('posts').innerHTML=data['currentChat']
         alert("user joined chat with username: "+data['username'])
     });
+
     socket.on('username left', function(data) {
         var curr=document.getElementById('currentUsers').innerText
         curr=curr.replace((data['username'] + ", "), "")
         document.getElementById('currentUsers').innerText=data['currentUserList']
         alert("user disconnected who had username: " + data['username'])
-            
     });
-
 </script>
+
 <h1>Hello {{ username }}</h1>
+
 <div id='currentUsers'>Currently Active Users: </div> <br>
+
 <div id='posts'>Chat: </div>
-<form>
-    <input type="text" placeholder="Type a post!">
-    <button type="submit">Send post</button>
+
+<form action="/chatpage" method="post">
+    <input id='postBox' name='postBox' type="text" placeholder="Type a post!">
+    <button type="submit" onclick="sendPost()">Send post</button>
 </form>
 {% endblock %}
