@@ -37,13 +37,13 @@ def login():
                 print("Successful login!")
                 session['username']=username
                 return redirect('/chatpage')
-                
+
             else: #username exist, but wrong password given
                 return redirect("/login")
-            
+
         else: #No such username exists
             return redirect('/login')
-        
+
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -56,7 +56,7 @@ def createAccount():
         query= { "username": username }
         #***registering users validation should be here***
         if accountCollection.count(query)==1:  #if this username already exists just send back to register page for now
-            return redirect('/register') 
+            return redirect('/register')
 
         else: #successful register
             #Hash password and then add username and password to accountCollection
@@ -77,6 +77,30 @@ def chat():
         return redirect('/chatpage')
     else:
         return abort(403)
+
+
+@app.route('/chat.js', methods=['GET'])
+def homejs():
+    if request.method == 'GET':
+        return render_template("chat.js")
+    else:
+        return abort(404)
+
+@app.route('/account', methods=['GET', 'POST'])
+def login():
+    # for some methods we should double check that a client is logged in, because that is a security feature in the project requirements
+    # we can double check by going through a dictionary of users mapped to their addresses,
+
+    # this dictionary contains all currently logged in users and if their address matches
+    # the user, we know it's legit, because they were authenticated when the key value pair was added to the dictionary
+    if request.method == 'GET':
+        return render_template("account.html")
+    elif request.method == 'POST':
+        # updating profile picture
+        return "" #probably some status code
+    else:
+        return abort(403)
+
 
 @socketio.on('user connected')
 def test_connect(auth):
@@ -101,8 +125,8 @@ def test_connect(auth):
         currentChatStr+=(user2+": "+postMessage+"<br>")
         doc2=next(currentChatCursor, None)
 
-    
-        
+
+
     emit('username joined', {'username': session['username'], 'currentUserList': currentUserListStr, 'currentChat': currentChatStr}, broadcast=True)
 
 @socketio.on('disconnect')
@@ -116,12 +140,12 @@ def test_disconnect():
         user=doc['username']
         currentUserListStr+=(user+", ")
         doc=next(currentUserListCursor, None)
-        
+
     emit('username left', {'username': session['username'], 'currentUserList': currentUserListStr}, broadcast=True)
     print('Client disconnected')
 
 
-    
+
 
 
 if __name__ == '__main__':
