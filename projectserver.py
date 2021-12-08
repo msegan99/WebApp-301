@@ -80,14 +80,14 @@ def chat():
 
 
 @app.route('/chat.js', methods=['GET'])
-def homejs():
+def chatjs():
     if request.method == 'GET':
         return render_template("chat.js")
     else:
         return abort(404)
 
 @app.route('/account', methods=['GET', 'POST'])
-def login():
+def account():
     # for some methods we should double check that a client is logged in, because that is a security feature in the project requirements
     # we can double check by going through a dictionary of users mapped to their addresses,
 
