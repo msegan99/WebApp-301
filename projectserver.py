@@ -1,8 +1,10 @@
-from flask import Flask, request, redirect, render_template, abort
+from flask import Flask, request, redirect, render_template, abort, session
 from pymongo import MongoClient
-import bcrypt
+import bcrypt, secrets
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
+app.config['SESSION_TYPE']='filesystem'
 client= MongoClient('localhost', 27017)
 db=client["312ProjectDatabase"]
 accountCollection=db["accountCollection"]
@@ -28,7 +30,8 @@ def login():
             passwordMatch=bcrypt.checkpw(password, hashedPassword)
             if passwordMatch: #SUCCESSFUL login. password keys match
                 print("Successful login!")
-                return redirect('/mainpage')
+                session['username']=username
+                return redirect('/chatpage')
                 
             else: #username exist, but wrong password given
                 return redirect("/login")
@@ -55,18 +58,16 @@ def createAccount():
             hashedPassword=bcrypt.hashpw(password, bcrypt.gensalt())
             document={ "username": username, "password": hashedPassword}
             accountCollection.insert(document)
-            return redirect('/mainpage')
+            session['username']=username
+            return redirect('/chatpage')
 
 
-@app.route('/mainpage')
-def mainpage():
-    return render_template("<html><body>main page</body></html>")
 
 
 @app.route('/chatpage', methods=['GET', 'POST'])
 def chat():
     if request.method == 'GET':
-        return render_template("<html><body>chat page</body></html>")
+        return render_template("chat.html", username=session['username'])
     if request.method == 'POST':
         # if it was a form, you can access it on request.form
         return "wow you made a post request to me!"
