@@ -16,6 +16,8 @@ accountCollection=db["accountCollection"]
 postCollection=db["chatCollection"]
 currentUserCollection=db["currentUserCollection"]
 
+activeUsers = [] # list of users that are active (logged in)
+
 @app.route('/')
 def hello():
     # return "Hello 312"
@@ -91,6 +93,8 @@ def chat():
 
 @app.route('/users', methods=['GET', 'POST'])
 def getTheUsers():
+    print(session)
+    print(session['username'])
     if request.method == 'POST':
 
         #document={"username": session['username'], "post": postMessage}
@@ -131,6 +135,34 @@ def account():
         return abort(403)
 
 
+@socketio.on('connect')
+def userConnected(): # on a user trying to connect, they can send their authentication cookie in auth (only if this parameter is included)
+    user = session['username']
+    print(" A client is trying to connect! Maybe it was "+user)
+    #authenticate user using their cookie
+    passedAuth = True
+    if passedAuth:
+        # add them to logged in users, this doesn't have to be stored in database, since users wouldn't be connected on a server restart
+        # ie. the logged in users datastructure doens't have to persist, and probably shouldn't
+        # emit('acknowleged', {'data': 'authenticated your websocket on server'})
+        print("True I guess")
+
+@socketio.on('disconnect')
+def userDisconnect(): # on a user trying to connect, they can send their authentication cookie in auth (only if this parameter is included)
+    user = session['username']
+    print(" A client is disconnecting! Maybe it was "+user)
+    #authenticate user using their cookie
+
+@socketio.on('someMessage')
+def userMessage(mess):
+    user=session['username']
+    print("I got: "+mess['data']+" from client: "+user)
+
+
+
+"""
+
+
 @socketio.on('user connected')
 def test_connect(auth):
     #update current user list
@@ -155,7 +187,7 @@ def test_connect(auth):
         doc2=next(currentChatCursor, None)
 
 
-
+    print("username: "+session['username']+" connected")
     emit('username joined', {'username': session['username'], 'currentUserList': currentUserListStr, 'currentChat': currentChatStr}, broadcast=True)
 
 @socketio.on('disconnect')
@@ -171,11 +203,11 @@ def test_disconnect():
         doc=next(currentUserListCursor, None)
 
     emit('username left', {'username': session['username'], 'currentUserList': currentUserListStr}, broadcast=True)
-    print('Client disconnected')
+    print("Client "+session['username']+" disconnected")
 
-
+"""
 
 
 
 if __name__ == '__main__':
-    socketio.run(app,debug=False) # this makes a random page pop up with our errors on it, change this to false eventually
+    socketio.run(app,host="localhost",port="8040",debug=True) # this makes a random page pop up with our errors on it, change this to false eventually
