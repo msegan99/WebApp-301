@@ -10,6 +10,7 @@ import hashlib
 import base64
 import sys
 
+from pymongo import MongoClient
 websockets = [] # list of sockets that were upgraded and being held in a thread, it need not be stored in a database
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
@@ -90,7 +91,11 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
 
 if __name__ == "__main__":
-    mongoMethods.dbInit()
+    #initialize mongo
+    client=MongoClient()
+    mongoMethods.dbInit(client)
+
+
     HOST, PORT = "localhost", 8000
 
     # Create the server, binding to localhost on port 9999
