@@ -1,6 +1,6 @@
-from flask import Flask, request, redirect, render_template, abort, session
+from flask import Flask, request, redirect, render_template, abort, session, jsonify
 from flask_socketio import SocketIO, send, emit
-from flask_session import Session
+#from flask_session import Session
 import json
 from pymongo import MongoClient
 import bcrypt, secrets
@@ -8,7 +8,7 @@ import bcrypt, secrets
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_urlsafe(16)
 app.config['SESSION_TYPE']='filesystem'
-Session(app)
+#Session(app)
 socketio=SocketIO(app)
 client= MongoClient('localhost', 27017)
 db=client["312ProjectDatabase"]
@@ -19,7 +19,7 @@ currentUserCollection=db["currentUserCollection"]
 @app.route('/')
 def hello():
     # return "Hello 312"
-    return render_template("index.html")
+    return redirect("/login")
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -32,7 +32,7 @@ def login():
         if(accountCollection.count_documents({"username": username})==1): #if this username exist
             accountDocument=accountCollection.find_one({"username": username})
             hashedPassword=accountDocument["password"]
-            passwordMatch=bcrypt.checkpw(password, hashedPassword)
+            passwordMatch=bcrypt.checkpw(password.encode(), hashedPassword)
             if passwordMatch: #SUCCESSFUL login. password keys match
                 print("Successful login!")
                 session['username']=username
@@ -51,20 +51,31 @@ def createAccount():
     if request.method=="GET": #if serving register.html
         return render_template("register.html")
     elif request.method=="POST": #if user is attempting to register from register page
+        if request.form["username"] == "" or request.form["password"] == "":
+            #then you can't make an account buddy
+            return redirect('/register')
         username=request.form["username"]
         password=request.form["password"]
         query= { "username": username }
         #***registering users validation should be here***
-        if accountCollection.count(query)==1:  #if this username already exists just send back to register page for now
+        findAccount = accountCollection.find_one(query)
+        print(findAccount)
+        print("Test: "+str(accountCollection.find_one({"username": "someUserNotExist"})))
+
+
+        if findAccount != None and findAccount != {}: # then this username exists, you can't take it
+
             return redirect('/register')
 
         else: #successful register
             #Hash password and then add username and password to accountCollection
-            hashedPassword=bcrypt.hashpw(password, bcrypt.gensalt())
+            hashedPassword=bcrypt.hashpw(password.encode(), bcrypt.gensalt())
             document={ "username": username, "password": hashedPassword}
-            accountCollection.insert(document)
+            accountCollection.insert_one(document)
             session['username']=username
+
             return redirect('/chatpage')
+
 
 @app.route('/chatpage', methods=['GET', 'POST'])
 def chat():
@@ -78,13 +89,31 @@ def chat():
     else:
         return abort(403)
 
+@app.route('/users', methods=['GET', 'POST'])
+def getTheUsers():
+    if request.method == 'POST':
 
-@app.route('/chat.js', methods=['GET'])
-def chatjs():
-    if request.method == 'GET':
-        return render_template("chat.js")
+        #document={"username": session['username'], "post": postMessage}
+        #postCollection.insert_one(document)
+        return jsonify({"user1": "imagename", "user2": "imagename2"})
     else:
+        return abort(403)
+
+
+@app.route('/image/<img>', methods=['GET', 'POST'])
+def serveImage(img):
+    if request.method == 'GET':
+        #return render_template(img)
         return abort(404)
+    if request.method == 'POST':
+
+        return abort(404)
+
+
+@app.route('/chat.js')
+def chatjs():
+    return render_template("chat.js")
+
 
 @app.route('/account', methods=['GET', 'POST'])
 def account():
@@ -132,7 +161,7 @@ def test_connect(auth):
 @socketio.on('disconnect')
 def test_disconnect():
     userDoc={"username": session['username']}
-    currentUserCollection.deleteOne(userDoc)
+    currentUserCollection.delete_one(userDoc)
     currentUserListCursor=currentUserCollection.find()
     currentUserListStr=""
     doc=next(currentUserListCursor, None)
@@ -149,4 +178,4 @@ def test_disconnect():
 
 
 if __name__ == '__main__':
-    socketio.run(app,debug=True)
+    socketio.run(app,debug=False) # this makes a random page pop up with our errors on it, change this to false eventually
