@@ -3,38 +3,22 @@
 <head>
 <title>Home Page!</title>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
-<script type="text/javascript" charset="utf-8">
-    var socket = io();
-    socket.on('connect', function(data) {
-        socket.emit('user connected', 'someone is connecting');
-    });
-    
-    socket.on('username joined', function(data) {
-        document.getElementById('currentUsers').innerHTML=data['currentUserList']
-        document.getElementById('posts').innerHTML=data['currentChat']
-        alert("user joined chat with username: "+data['username'])
-    });
-
-    socket.on('username left', function(data) {
-        var curr=document.getElementById('currentUsers').innerText
-        curr=curr.replace((data['username'] + ", "), "")
-        document.getElementById('currentUsers').innerText=data['currentUserList']
-        alert("user disconnected who had username: " + data['username'])
-    });
-</script>
-<script type="text/javascript" src="chat.js"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+-->
+<script src="chat.js"></script>
 </head>
+
 <body>
 <!-- Start of Current Users and DM functionality -->
   <h1>Welcome User!</h1><br>
   <h1>Here's a list of other logged in users</h1>
   <div id="userList"></div>
+  <script>getUsers();</script>
   <br><br><br><br>
-    
-    
+
+
 <!-- End of Current Users and DM functionality -->
-    
+
 
 <h1>Hello {{ username }}</h1>
 
@@ -46,5 +30,29 @@
     <input id='postBox' name='postBox' type="text" placeholder="Type a post!">
     <button type="submit" onclick="sendPost()">Send post</button>
 </form>
+
+<!--
+<script type="text/javascript" charset="utf-8">
+    var socket = io();
+    socket.on('connect', function(data) {
+        console.log("Emitting user connected someone is connecting");
+        socket.emit('user connected', 'someone is connecting');
+    });
+
+    socket.on('username joined', function(data) {
+        console.log("alert user jsoined chat with username ");
+        document.getElementById('currentUsers').innerHTML=data['currentUserList']
+        document.getElementById('posts').innerHTML=data['currentChat']
+        alert("user joined chat with username: "+data['username'])
+    });
+
+    socket.on('username left', function(data) {
+        console.log("username left");
+        var curr=document.getElementById('currentUsers').innerText
+        curr=curr.replace((data['username'] + ", "), "")
+        document.getElementById('currentUsers').innerText=data['currentUserList']
+        alert("user disconnected who had username: " + data['username'])
+    });
+</script> -->
 </body>
 </html>
