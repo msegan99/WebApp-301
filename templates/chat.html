@@ -3,8 +3,8 @@
 <head>
 <title>Home Page!</title>
 
-<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
--->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+
 <script src="chat.js"></script>
 </head>
 
@@ -18,6 +18,8 @@
 
 
 <!-- End of Current Users and DM functionality -->
+<button onclick="socket.emit('someMessage', {'data': 'I clicked the button.'});">Send webframe to server</button>
+<br><br>
 
 
 <h1>Hello {{ username }}</h1>
@@ -31,8 +33,49 @@
     <button type="submit" onclick="sendPost()">Send post</button>
 </form>
 
-<!--
 <script type="text/javascript" charset="utf-8">
+    console.log("About to make websocket connection?");
+    var socket = io("http://localhost:8040");
+
+    socket.on('connect', function() { // probably gets this event after connecting to server
+        console.log("I'm connected I think!");
+        // the next line basically says the following:
+        // I tried to connect to you, I connected to you, I'm telling server that they told me that I connected to them. lol
+        //socket.emit('AckTwo', {data: 'I got your connect event dude!'});
+    });
+
+    socket.on('disconnect', function() { // if we get disconnected from the server
+        console.log("I got disconnected from my websocket on the server :(");
+
+    });
+
+    socket.on('message', (message) => { // when we get an event 'message' from the server
+        console.log(message);
+
+    });
+
+
+    socket.on('newMessage', (argument) => {
+        console.log("Event newMessage activated!")
+        console.log(argument)
+
+    });
+
+    socket.on('newUpvote', (argument) => {
+        console.log("Event newUpvote activated!");
+        console.log(argument)
+    });
+</script>
+
+
+
+
+
+
+
+
+
+<!-- <script type="text/javascript" charset="utf-8">
     var socket = io();
     socket.on('connect', function(data) {
         console.log("Emitting user connected someone is connecting");
