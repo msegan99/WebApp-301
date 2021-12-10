@@ -14,7 +14,7 @@ def addAccount(username, password):
     db=client['312ChatApp']
     accountCollection=db['accounts']
     #hash password here
-    hashedPassword=bcrypt.hashpw(password, bcrypt.gensalt())
+    hashedPassword=bcrypt.hashpw(password.encode(), bcrypt.gensalt())
     docToInsert={ "username": username, "password": hashedPassword, "lastToken": ""}
     accountCollection.insert_one(docToInsert)
     return 1
@@ -24,7 +24,7 @@ def verifyLogin(username, password):
     db=client['312ChatApp']
     accountCollection=db['accounts']
     hashedPassword=accountCollection.find_one({"username": username})["password"]
-    passwordMatch=bcrypt.checkpw(password, hashedPassword) #true if passwords match/authed login. false otherwise
+    passwordMatch=bcrypt.checkpw(password.encode(), hashedPassword) #true if passwords match/authed login. false otherwise
     return passwordMatch
 
 #verify the account, then remove them from database
@@ -40,7 +40,7 @@ def newUserToken(username, token):
     accountCollection=db['accounts']
     hashedPassword=accountCollection.find_one({"username": username})["password"]
     #hash token here
-    hashedToken=bcrypt.hashpw(token, bcrypt.gensalt())
+    hashedToken=bcrypt.hashpw(token.encode(), bcrypt.gensalt())
     accountCollection.remove({"username": username})
     docToInsert={ "username": username, "password":hashedPassword , "token": hashedToken}
     accountCollection.insert_one(docToInsert)
