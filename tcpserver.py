@@ -91,10 +91,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
 
 if __name__ == "__main__":
-    #initialize mongo
-    client=MongoClient()
-    mongoMethods.dbInit(client)
 
+    mongoMethods.dbInit()
 
     HOST, PORT = "localhost", 8000
 

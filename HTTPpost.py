@@ -1,6 +1,6 @@
 import helper
-
-
+import mongoMethods
+import secrets
 
 
 
@@ -17,8 +17,21 @@ def createPostResponse(route, header, body):
 
     if route.startswith("/login"):
         formDict = helper.getFormData(header, body, ["username", "password"])
+        username=formDict["username"]
+        password=formDict["password"]
         print(formDict)
-        return bytes(helper.generateHeader("301", "null", "null", "/chatpage"), 'ascii')
+        authorized=mongoMethods.verifyLogin(username, password)
+        if authorized:
+            #update database with a new token for every valid login. (There shouldnt be a need to login if a valid token was sent already)
+            token = secrets.token_urlsafe(50)
+            mongoMethods.newUserToken(username, token)
+            responseWithoutAuthCookie=(helper.generateHeader("301", "null", "null", "/chatpage"))+"\r\n"
+            #add token cookie
+            responseWithoutAuthCookie+="Set-Cookie: "+token+"\r\n"
+            return bytes(responseWithoutAuthCookie, 'ascii')
+        else:
+            #redirect to/login. login was not verified
+            return bytes(helper.generateHeader("301", "null", "null", "/login"), 'ascii')
 
 
 
@@ -34,8 +47,8 @@ def createPostResponse(route, header, body):
             return bytes(helper.generateHeader("301", "null", "null", "/register"), 'ascii')
         username = formDict["username"]
         password = formDict["password"]
-        #hash the password and stuff
-        #do stuff with the credentials, like database stuff
+        #insert account into database(addAccount method will hash password)
+        mongoMethods.addAccount(username, password)
 
         #redirect to login if credentials are added
         return bytes(helper.generateHeader("301", "null", "null", "/login"), 'ascii')
