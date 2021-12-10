@@ -1,4 +1,4 @@
-
+import mongoMethods
 
 
 def sanitizeInput(input):
@@ -26,10 +26,59 @@ def sanitizePath(s):
 
 
 def getHeaderElement(header, someKey):
-    return 1
+    headerLines = header.split("\r\n")
+    for line in headerLines:
+        if line.startswith(someKey):
+            return line.split(": ",maxsplit=1)[1]
+    return ""
 
-# Given a header (string), a body (bytes), and a list of names inside a multipart form
-# this returns the names given mapped to their values in the form data
+def parseCookies(cString):
+    print(cString)
+    cookies = cString.strip(" ").split(";")
+    authTok = ""
+    for cookie in cookies:
+        if cookie.strip(" ").startswith("token"):
+            print("Found token")
+            print(cookie)
+            authTok = cookie.strip(" ").split("=")[1].strip(" ")
+            print(authTok)
+            return authTok
+
+
+def getImg(header, body):
+    headerLines = header.split("\r\n")
+    type = ""
+    bound = ""
+    file = ""
+    data = b""
+    for line in headerLines:
+        if line.startswith("Content-Type: "):
+            #print("the content type line is: " + line)
+            type = line.split(" ", maxsplit=1)[1]
+            if type.startswith("multipart/form-data; boundary="):
+                bound = type.split("=", maxsplit=1)[1]
+                #print(bound)
+                print("got bound")
+    fields = body.split(bytes(bound, 'ascii'))
+    for f in fields:
+        #print(f)
+        for l in f.split(bytes("\n", 'ascii'), maxsplit=2):
+            #print(l)
+            if l.startswith(bytes("Content-Disposition: form-data; name=\"upload\"", 'ascii')):
+                stuff = f.split(bytes("\n", 'ascii'), maxsplit=2)[1]
+                morestuff = stuff.decode().split("filename=")[1]
+                file = morestuff.split("\"")[1]
+                #print("\n\n\n\n\n\nTHIS IS THE FILE NAME: "+file+"\n\n\n\n\n\n\n")
+                data = f.split(bytes("\r\n\r\n", 'ascii'), maxsplit=1)[1]
+                data = data.rstrip(bytes("\r\n--", 'ascii'))
+                #print("printing data")
+                #print(data)
+                return data
+
+
+
+
+
 def getFormData(header, body, nameList):
     returnDict={}
     headerLines = header.split("\r\n")
@@ -53,15 +102,17 @@ def getFormData(header, body, nameList):
     return returnDict
 
 
-def uploadImage(file, data, caption):
+def uploadImage(data):
     # file should be path sanitized
     #IMPLEMENT AN INCREMENTOR FROM DATABASE TO GENERATE FILE NAMES
-    fi = open( ("image/" + file), "x")
-    with open( ("image/" + file), "wb") as f:
+    theFilename=mongoMethods.doInc()
+    print(theFilename)
+    fi = open( ("image/" + str(theFilename)), "x")
+    with open( ("image/" + str(theFilename)), "wb") as f:
         f.write(data)
         f.close()
     #imgList.append(file)
-    return True
+    return str(theFilename)
 
 
 def copyFile(filename, newFilename):
@@ -73,6 +124,11 @@ def copyFile(filename, newFilename):
 def getFile(filename):
     #returns file data as bytes
     with open(filename, "rb") as f:
+        return f.read()
+
+def getFileString(filename):
+    #returns file data as string
+    with open(filename, "r") as f:
         return f.read()
 
 
@@ -121,7 +177,11 @@ def generateHeader(code, type, data, newPath):
         head+="403 Forbidden\r\n"
         head+="Content-Type: text/plain\r\n"
         head+="X-Content-Type-Options: nosniff\r\n"
-        head+="Content-Length: 34\r\n\r\nThe requested content is forbidden"
+        if data != "null":
+            head+="Content-Length: "+str(len(data))+"\r\n\r\n"
+            head+=data
+        else:
+            head+="Content-Length: 34\r\n\r\nThe requested content is forbidden"
         return head
     else:
         head+=""

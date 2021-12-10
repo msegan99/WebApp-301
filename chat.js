@@ -2,16 +2,25 @@
 // var checkDMs = setInterval(recieveDM, 3000); - when not using websockets
 var curUser = "";
 
-
+var firstRead=true;
 
 // Establish a WebSocket connection with the server
 const socket = new WebSocket('ws://' + 'localhost:8000' + '/websocket');
 
 
-/*
-// Call the addMessage function whenever data is received from the server over the WebSocket
-socket.onmessage = addMessage;
 
+// Call the addMessage function whenever data is received from the server over the WebSocket
+socket.onmessage = readMessage;
+function readMessage(message) {
+  if (firstRead==true){
+    theData = JSON.parse(message.data);
+    //thelist=theData["users"];
+    generateUserList(theData)
+  }
+  firstRead=false;
+}
+
+/*
 // Allow users to send messages by pressing enter instead of clicking the Send button
 document.addEventListener("keypress", function (event) {
    if (event.code === "Enter") {

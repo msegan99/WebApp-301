@@ -1,6 +1,7 @@
 import helper
 import mongoMethods
 import secrets
+import HTTPget
 
 
 
@@ -14,8 +15,20 @@ def processRequest(header, body):
 def createPostResponse(route, header, body):
     print("started creating post response!")
 
+    if route.startswith("/image"):
+        tok = HTTPget.doAuth(header)
+        if (tok != ""):
+            user=mongoMethods.getUsername(tok)
+            data = helper.getImg(header, body)
+            file = helper.uploadImage(data)
+            print(file)
+            mongoMethods.addImage(file)
+            mongoMethods.updateImage(user, file)
+            data = helper.getFile("account.html")
+            return b"".join([bytes(helper.generateHeader("200", "text/html", data, "null"), 'ascii'), data])
 
-    if route.startswith("/login"):
+
+    elif route.startswith("/login"):
         formDict = helper.getFormData(header, body, ["username", "password"])
         username=formDict["username"]
         password=formDict["password"]
@@ -24,8 +37,9 @@ def createPostResponse(route, header, body):
         if authorized:
             #update database with a new token for every valid login. (There shouldnt be a need to login if a valid token was sent already)
             token = secrets.token_urlsafe(50)
-            mongoMethods.newUserToken(username, token)
-            htmlString=helper.getFile("chat.html").decode('UTF-8')
+            a = mongoMethods.newUserToken(username, token)
+            print("I did it"+ str(a))
+            htmlString=helper.getFileString("chat.html")
             htmlString=htmlString.replace("@@", username)
             length=len(htmlString)
             response=("HTTP/1.1 200 OK\r\n" +

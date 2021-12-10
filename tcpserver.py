@@ -29,9 +29,9 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
             if contentLength > bytesRecieved:
                 #then we need more information to complete the body
-                while bytesRecieved < bodyLen:
+                while bytesRecieved < contentLength:
                     #get the next set of bytes
-                    self.data = self.request.recv(1024)
+                    self.data = self.request.recv(2048)
                     newBody = self.data
                     bytesRecieved += len(newBody)
                     body = b"".join([body, newBody])
@@ -49,13 +49,16 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
             print(self.data.decode().split(" ", maxsplit=2)[1])
             if (self.data.decode().split(" ", maxsplit=2)[1] == "/websocket"):
+                header = self.data.split(bytes("\r\n\r\n", 'ascii'), maxsplit=1)[0].decode()
+                tok = HTTPget.doAuth(header)
+                theuser = mongoMethods.getUsername(tok)
 
-                websockets.append(self)
+                websockets.append([self, theuser])
                 newWS = True
                 sys.stdout.flush()
                 sys.stderr.flush()
 
-                header = self.data.split(bytes("\r\n\r\n", 'ascii'), maxsplit=1)[0].decode()
+                #header = self.data.split(bytes("\r\n\r\n", 'ascii'), maxsplit=1)[0].decode()
                 response = handleWebsocket.responseUpgrade(header)
 
                 self.request.sendall(response.encode())
@@ -66,6 +69,13 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                 #needs to be handled still !!!!!!!!!
 
                 print("I'm about to go into a websocket loop")
+                onlineUsers="{"
+                for t in websockets:
+                    onlineUsers+="\""+str(t[1])+"\": \""+mongoMethods.getImage(theuser)+"\", "
+                onlineUsers=onlineUsers.rstrip(", ")
+                onlineUsers+="}"
+                print(onlineUsers)
+                self.request.sendall(handleWebsocket.createWebFrame(onlineUsers))
                 while (notClosed):
                     self.data = self.request.recv(2048) #maybe make this byte size bigger...?
 
@@ -77,8 +87,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
                         break
 
                     newResponse = handleWebsocket.processWebFrame(self.data)
-                    for ws in websockets:
-                        ws.request.sendall(newResponse)
+                    for t in websockets:
+                        t[0].request.sendall(newResponse)
 
 
             else:
