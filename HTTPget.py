@@ -1,5 +1,5 @@
 import helper
-
+import mongoMethods
 
 
 
@@ -10,10 +10,10 @@ import helper
 def processRequest(data):
     route = data.decode().split(" ", maxsplit=2)[1]
     print("GET request on route: "+route)
-    return createResponse(route)
+    return createResponse(route, data)
 
 
-def createResponse(route):
+def createResponse(route, data):
     print("I'm about to send a response for the route "+route)
 
 
@@ -27,8 +27,29 @@ def createResponse(route):
 
 
     elif route == "/chatpage":
-        data = helper.getFile("chat.html")
-        return b"".join([bytes(helper.generateHeader("200", "text/html", data, "null"), 'ascii'), data])
+        dataStr = helper.getFile("chat.html").decode("UTF-8")
+        #get token from cookie in data(data is wholeRequest)
+        reqLines=(data.decode('UTF-8')).split("\r\n")
+        token=""
+        for line in reqLines:
+            kvList=line.split(": ")
+            if kvList[0]=="Cookie":
+                kv=kvList[1]
+                if kv.split("=")[0]=="token":
+                    token=kv.split("=")[1]
+
+        if token=="": #no token cookie
+            htmlString=helper.generateHeader("200", "text/html", data, "null")
+            return b"".join([bytes(htmlString, 'ascii'), data])
+
+        else: 
+            #get username from mongo using token
+            username=mongoMethods.getUsername(token)
+            #fill html template with username
+            dataStr=dataStr.replace("@@", username)
+            data=dataStr.encode('UTF-8')
+            htmlString=helper.generateHeader("200", "text/html", data, "null")
+            return b"".join([bytes(htmlString, 'ascii'), data])
 
 
     elif route == "/chat.js":

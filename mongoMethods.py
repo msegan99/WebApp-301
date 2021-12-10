@@ -49,7 +49,20 @@ def newUserToken(username, token):
 
 def addPost(username, postMessage):
     db=client['312ChatApp']
-    postCollection=db['accounts']
+    postCollection=db['posts']
     postDoc={"username": username, "postMessage": postMessage}
     postCollection.insert_one(postDoc)
+
+
+def getUsername(token):
+    db=client['312ChatApp']
+    accountCollection=db['accounts']
+    cursor=accountCollection.find()
+    while cursor.hasNext:
+        doc=cursor.next()
+        hashedToken=doc["token"]
+        if bcrypt.checkpw(token, hashedToken): #if tokens match we found the username this cookie is validating
+            return doc["username"]
+    return None
+
 

@@ -25,10 +25,17 @@ def createPostResponse(route, header, body):
             #update database with a new token for every valid login. (There shouldnt be a need to login if a valid token was sent already)
             token = secrets.token_urlsafe(50)
             mongoMethods.newUserToken(username, token)
-            responseWithoutAuthCookie=(helper.generateHeader("301", "null", "null", "/chatpage"))+"\r\n"
+            htmlString=helper.getFile("chat.html").decode('UTF-8')
+            htmlString=htmlString.replace("@@", username)
+            length=len(htmlString)
+            response=("HTTP/1.1 200 OK\r\n" +
+                                        "Content-Type: text/html\r\n" +
+                                        "X-Content-Type-Options: nosniff\r\n" +
+                                        "Set-Cookie: token="+token+"\r\n"
+                                        "Content-Length: "+str(length)+"\r\n\r\n" +
+                                        htmlString)
             #add token cookie
-            responseWithoutAuthCookie+="Set-Cookie: "+token+"\r\n"
-            return bytes(responseWithoutAuthCookie, 'ascii')
+            return bytes(response, 'ascii')
         else:
             #redirect to/login. login was not verified
             return bytes(helper.generateHeader("301", "null", "null", "/login"), 'ascii')
