@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Register Account</title>
+
+<link rel="stylesheet" type="text/css" href="register.css">
+<!-- <script type="text/javascript" src="register.js"></script> -->
+
+</head>
+<body>
+  <h1 align="center">Ready to make an account?</h1>
+  <h2 align="center">Just input a username and password to get setup!</h2>
+
+
+  <form action="/register" id="new-account" method="post" enctype="multipart/form-data">
+    <label for="user">Username:</label><br>
+    <input type="text" id="user" name="username"><br>
+
+    <label for="pass">Password:</label><br>
+    <input type="password" id="pass" name="password">
+
+    <input type="submit" value="Create Account">
+  </form>
+
+
+</body>
+
+</html>
