@@ -1,3 +1,0 @@
-Flask library report: https://docs.google.com/document/d/1KBWzYIxbyiAuP5_uVGQiscTNb_guIDBsB6_xbUyvUVE/edit#heading=h.kj9fnz41yqvd
-
-Flask-SocketIO library report: https://docs.google.com/document/d/1oLjvUaCvbydUJMJRqe0kC1l47xwasehIEpvg0XgE12Q/edit#heading=h.kj9fnz41yqvd
