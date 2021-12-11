@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chatroom - Register</title>
+    <link rel="stylesheet" type="text/css" href="style.css"/>
+</head>
+<body>
+<nav>
+    <a href="/">Home</a>
+    <a href="/About">About</a>
+    <a href="/login">Login</a>
+    <a href="/register">Register</a>
+</nav>
+<br>
+<h1>Welcome to Chatroom!</h1>
+<h2>Register</h2>
+<form action="/register" id="register-form" method="post">
+    <label for="register-email">Email: </label>
+    <input id="register-email" type="text" name="email">
+    <br/>
+    <label for="register-password">Password: </label>
+    <input id="register-password" type="password" name="password">
+    <input type="submit" value="Register">
+</form>
+<br><br><br><br>
+<h3>Already have an account?</h3>
+<a href="/login">Login now!</a>
+<script>alert("Registration failed, password requirements not met!")</script>
+</body>
+</html>

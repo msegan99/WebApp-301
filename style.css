@@ -1,0 +1,12 @@
+
+body {
+    background-color: black;
+    color: wheat;
+    text-align: center;
+}
+
+p{
+    text-align: justify;
+    text-indent: 500px;
+    border: darkblue;
+}
